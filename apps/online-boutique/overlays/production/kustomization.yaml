@@ -7,6 +7,7 @@ resources:
   - peer-auth.yaml
   - deny-all.yaml
   - allow-frontend.yaml
+  - allow-internal.yaml
   - ingress.yaml
 patches:
   - target: {kind: Deployment}
