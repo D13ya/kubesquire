@@ -2,6 +2,16 @@
 
 **Objective:** Remove base64-encoded secrets from Git and etcd. Inject them dynamically from an external vault.
 
+**Prerequisites:**
+*   **Tools:** `helm`, `kubectl`.
+*   **Cloud Provider:** Access to AWS Secrets Manager, Google Secret Manager, or Azure Key Vault.
+*   **Permissions:** Ability to create IAM roles/Service Accounts in the cloud provider.
+
+**Official Documentation:**
+*   [External Secrets Operator Docs](https://external-secrets.io/latest/)
+*   [Google Secret Manager Provider](https://external-secrets.io/latest/provider/google-secrets-manager/)
+*   [AWS Secrets Manager Provider](https://external-secrets.io/latest/provider/aws-secrets-manager/)
+
 ## 1. Install External Secrets Operator (ESO)
 
 ```bash
@@ -11,10 +21,26 @@ helm install external-secrets external-secrets/external-secrets -n external-secr
 
 ## 2. Configure the Secret Store
 
-This example uses Google Secret Manager, but ESO supports AWS Secrets Manager, Azure Key Vault, and HashiCorp Vault.
+This example uses Google Secret Manager. For AWS or Azure, refer to the provider docs linked above.
 
 ### Step 2.1: Create a Service Account (GCP)
 Ensure your GKE nodes or a specific Workload Identity ServiceAccount has permissions to access Secret Manager (`roles/secretmanager.secretAccessor`).
+
+**Workload Identity Setup (GKE Example):**
+1.  Create a GCP Service Account (GSA).
+2.  Grant `roles/secretmanager.secretAccessor` to the GSA.
+3.  Bind the GSA to the Kubernetes Service Account (KSA) `external-secrets` in the `external-secrets` namespace.
+    ```bash
+    gcloud iam service-accounts add-iam-policy-binding $GSA_EMAIL \
+        --role roles/iam.workloadIdentityUser \
+        --member "serviceAccount:$PROJECT_ID.svc.id.goog[external-secrets/external-secrets]"
+    ```
+4.  Annotate the KSA:
+    ```bash
+    kubectl annotate serviceaccount external-secrets \
+        --namespace external-secrets \
+        iam.gke.io/gcp-service-account=$GSA_EMAIL
+    ```
 
 ### Step 2.2: Define ClusterSecretStore
 This resource tells ESO *how* to connect to your vault.
@@ -28,13 +54,13 @@ metadata:
 spec:
   provider:
     gcpsm:
-      projectID: "your-gcp-project-id"
+      projectID: "your-gcp-project-id" # <--- UPDATE THIS
       auth:
         workloadIdentity:
-          clusterLocation: "us-central1"
-          clusterName: "your-cluster-name"
+          clusterLocation: "us-central1" # <--- UPDATE THIS
+          clusterName: "your-cluster-name" # <--- UPDATE THIS
           serviceAccountRef:
-            name: "external-secrets-sa"
+            name: "external-secrets"
             namespace: "external-secrets"
 ```
 

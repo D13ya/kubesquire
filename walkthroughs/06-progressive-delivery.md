@@ -2,11 +2,25 @@
 
 **Objective:** Automate safe deployments using Canary releases gated by real-time metrics.
 
+**Prerequisites:**
+*   **Tools:** `kubectl`, `kubectl-argo-rollouts` plugin.
+*   **Metrics:** Prometheus must be installed and scraping your application (Istio metrics are ideal).
+
+**Official Documentation:**
+*   [Argo Rollouts Installation](https://argoproj.github.io/argo-rollouts/installation/)
+*   [Argo Rollouts Concepts](https://argoproj.github.io/argo-rollouts/concepts/)
+*   [Analysis Template Docs](https://argoproj.github.io/argo-rollouts/features/analysis/)
+
 ## 1. Install Argo Rollouts
 
 ```bash
 kubectl create namespace argo-rollouts
 kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+
+# Install the kubectl plugin (optional but recommended)
+curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+chmod +x ./kubectl-argo-rollouts-linux-amd64
+sudo mv ./kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts
 ```
 
 ## 2. Convert Deployment to Rollout
@@ -69,6 +83,7 @@ spec:
     successCondition: result[0] >= 0.99
     provider:
       prometheus:
+        # Ensure this address matches your Prometheus service
         address: http://prometheus-server.monitoring.svc.cluster.local:9090
         query: |
           sum(irate(istio_requests_total{reporter="source",destination_service=~"{{args.service-name}}",response_code!~"5.*"}[1m])) / 

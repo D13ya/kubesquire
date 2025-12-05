@@ -2,6 +2,15 @@
 
 **Objective:** Ensure the tools managing your security (ArgoCD, ESO, Istio) are not themselves vulnerabilities.
 
+**Prerequisites:**
+*   **Tools:** `kubectl`, `jq`.
+*   **Access:** Cluster Admin permissions to view ClusterRoleBindings.
+
+**Official Documentation:**
+*   [Kubernetes RBAC Good Practices](https://kubernetes.io/docs/concepts/security/rbac-good-practices/)
+*   [ArgoCD Security](https://argo-cd.readthedocs.io/en/stable/operator-manual/security/)
+*   [External Secrets Security](https://external-secrets.io/latest/guides/security-best-practices/)
+
 ## 1. Audit Operator Permissions
 
 Many Operators request `cluster-admin` by default. We must verify if they actually need it.

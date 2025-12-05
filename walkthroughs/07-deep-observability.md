@@ -2,6 +2,14 @@
 
 **Objective:** Visualize network flows and verify that your Zero Trust policies are actually dropping traffic.
 
+**Prerequisites:**
+*   **Tools:** `cilium` CLI, `hubble` CLI.
+*   **Cluster:** Cilium installed with Hubble enabled.
+
+**Official Documentation:**
+*   [Hubble Observability](https://docs.cilium.io/en/stable/observability/hubble/intro/)
+*   [Tetragon Documentation](https://tetragon.io/docs/)
+
 ## 1. Enable Hubble
 
 If you installed Cilium in Phase 2, enable Hubble for visibility.
@@ -40,6 +48,7 @@ Tetragon provides kernel-level visibility and enforcement.
 
 ### Step 3.1: Install Tetragon
 ```bash
+helm repo add cilium https://helm.cilium.io/
 helm install tetragon cilium/tetragon -n kube-system
 ```
 

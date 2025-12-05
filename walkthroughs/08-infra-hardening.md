@@ -2,6 +2,15 @@
 
 **Objective:** Secure the underlying nodes and restrict human access to the cluster.
 
+**Prerequisites:**
+*   **Tools:** `kubectl`.
+*   **Identity Provider:** Google, Okta, or Azure AD configured for OIDC.
+
+**Official Documentation:**
+*   [Kube-Bench GitHub](https://github.com/aquasecurity/kube-bench)
+*   [Kubernetes OIDC Authentication](https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens)
+*   [Kubectl OIDC Login](https://github.com/int128/kubelogin)
+
 ## 1. Node Hardening (CIS Benchmarks)
 
 We use `kube-bench` to check if our nodes meet the Center for Internet Security (CIS) standards.

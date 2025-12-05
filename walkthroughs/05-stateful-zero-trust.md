@@ -2,6 +2,16 @@
 
 **Objective:** Replace ephemeral, insecure databases with production-grade, encrypted, and managed instances using Operators.
 
+**Prerequisites:**
+*   **Tools:** `kubectl`.
+*   **Storage:** A default StorageClass that supports dynamic provisioning (standard on GKE/EKS/AKS).
+*   **Object Storage:** An S3 bucket or GCS bucket for backups.
+
+**Official Documentation:**
+*   [CloudNativePG Documentation](https://cloudnative-pg.io/documentation/current/)
+*   [CloudNativePG Security](https://cloudnative-pg.io/documentation/current/security/)
+*   [CloudNativePG Backup & Recovery](https://cloudnative-pg.io/documentation/current/backup_recovery/)
+
 ## 1. Install CloudNativePG Operator
 
 We will replace the default `redis` deployment with a secure Postgres cluster (as an example of stateful rigor, though the demo uses Redis primarily).
@@ -30,7 +40,7 @@ spec:
   # Storage Configuration (Ensure your StorageClass has encryption enabled)
   storage:
     size: 1Gi
-    storageClass: standard-rwo 
+    storageClass: standard-rwo # <--- UPDATE THIS if using a different class
 
   # Bootstrap method
   bootstrap:
@@ -43,8 +53,8 @@ spec:
   # Backup Configuration (Zero Trust Data Recovery)
   backup:
     barmanObjectStore:
-      destinationPath: s3://your-backup-bucket/
-      endpointURL: https://storage.googleapis.com
+      destinationPath: s3://your-backup-bucket/ # <--- UPDATE THIS
+      endpointURL: https://storage.googleapis.com # <--- UPDATE THIS for AWS/Azure
       s3Credentials:
         inheritFromIAMRole: true # Use Workload Identity!
 ```
@@ -63,3 +73,7 @@ kubectl exec -it secure-db-1 -n online-boutique -- psql -U appuser app
 
 ### Step 3.2: Verify Workload Identity
 Ensure the pod can access the backup bucket without explicit access keys in the pod environment variables.
+*   Check the logs of the instance to see if WAL archiving to the object store is successful.
+    ```bash
+    kubectl logs secure-db-1 -n online-boutique | grep "archived WAL file"
+    ```

@@ -2,6 +2,18 @@
 
 **Objective:** Establish a trusted pipeline where artifacts are verified, scanned, and templated before reaching the cluster.
 
+**Prerequisites:**
+*   **Tools:** `kpt`, `kustomize`, `docker`, `syft`, `trivy`, `cosign`.
+*   **Access:** Read/Write access to an OCI Registry (e.g., GCR, Artifact Registry, Docker Hub).
+*   **Cluster:** A running Kubernetes cluster (GKE/EKS/Kind) is not strictly required for this phase (it's mostly local/CI), but `kubectl` should be configured if you plan to apply.
+
+**Official Documentation:**
+*   [kpt Documentation](https://kpt.dev/book/02-concepts/01-packages)
+*   [Kustomize Documentation](https://kubectl.docs.kubernetes.io/references/kustomize/)
+*   [Syft (SBOM) GitHub](https://github.com/anchore/syft)
+*   [Trivy Documentation](https://aquasecurity.github.io/trivy/v0.18.3/)
+*   [Cosign Documentation](https://docs.sigstore.dev/cosign/overview/)
+
 ## 1. Templating with Kustomize & kpt
 
 We will use `kpt` to fetch the upstream Online Boutique and `Kustomize` to apply security overlays without modifying upstream code.
@@ -12,6 +24,7 @@ mkdir -p apps/online-boutique
 cd apps/online-boutique
 
 # Fetch the latest version of Online Boutique using kpt
+# Reference: https://kpt.dev/reference/cli/pkg/get/
 kpt pkg get https://github.com/GoogleCloudPlatform/microservices-demo/kustomize@main base
 ```
 
@@ -32,8 +45,10 @@ kind: Kustomization
 
 resources:
   - ../../base
-  - ../../components/network-policies  # If you fetched these or created them
-  - ../../components/service-mesh-istio
+  # Ensure you have fetched or created these components. 
+  # See Phase 2 for creating the network-policies component.
+  # - ../../components/network-policies  
+  # - ../../components/service-mesh-istio
 
 # Common labels for all resources
 commonLabels:
@@ -60,11 +75,14 @@ These steps should be integrated into your CI pipeline (GitHub Actions / Cloud B
 ### Step 2.1: Generate SBOM with Syft
 Generate a Software Bill of Materials for the frontend image.
 
+*Note: Replace `gcr.io/google-samples/microservices-demo/frontend:v0.8.0` with your own registry image if you are rebuilding the app.*
+
 ```bash
 # Generate SBOM in SPDX format
 syft packages gcr.io/google-samples/microservices-demo/frontend:v0.8.0 -o spdx-json > frontend-sbom.spdx.json
 
 # Upload SBOM to registry (if supported) or store as artifact
+# Ensure you are authenticated to the registry (e.g., `gcloud auth configure-docker`)
 cosign attach sbom --sbom frontend-sbom.spdx.json gcr.io/google-samples/microservices-demo/frontend:v0.8.0
 ```
 
@@ -83,6 +101,7 @@ Sign the image to prove it passed your CI checks.
 cosign generate-key-pair
 
 # Sign the image
+# The 'cosign.key' is the private key generated above.
 cosign sign --key cosign.key gcr.io/google-samples/microservices-demo/frontend:v0.8.0
 ```
 
@@ -90,10 +109,13 @@ cosign sign --key cosign.key gcr.io/google-samples/microservices-demo/frontend:v
 
 Validate your rendered manifests against policies before applying.
 
+**Prerequisite:** You need a set of Kyverno policies (e.g., Pod Security Standards) in a `policies/` folder.
+*   [Kyverno Policies Library](https://kyverno.io/policies/)
+
 ```bash
 # Render the manifests
 kustomize build overlays/production > rendered.yaml
 
-# Validate against Kyverno policies (assuming you have a policies folder)
+# Validate against Kyverno policies
 kyverno apply policies/ --resource rendered.yaml
 ```
