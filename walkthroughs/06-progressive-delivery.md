@@ -13,11 +13,34 @@
 
 ## 1. Install Argo Rollouts
 
-```bash
-kubectl create namespace argo-rollouts
-kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
 
-# Install the kubectl plugin (optional but recommended)
+kubectl create namespace argo-rollouts
+
+# Secure Practice: Download, Inspect, Apply
+Invoke-WebRequest -Uri "https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml" -OutFile "argo-rollouts-install.yaml"
+kubectl apply -n argo-rollouts -f argo-rollouts-install.yaml
+
+# Install the kubectl plugin (Windows)
+# Download from: https://github.com/argoproj/argo-rollouts/releases/latest
+# Rename to kubectl-argo-rollouts.exe and add to PATH
+```
+
+**Bash:**
+```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+kubectl create namespace argo-rollouts
+
+# Secure Practice: Download, Inspect, Apply
+curl -o argo-rollouts-install.yaml https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+kubectl apply -n argo-rollouts -f argo-rollouts-install.yaml
+
+# Install the kubectl plugin
 curl -LO https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
 chmod +x ./kubectl-argo-rollouts-linux-amd64
 sudo mv ./kubectl-argo-rollouts-linux-amd64 /usr/local/bin/kubectl-argo-rollouts

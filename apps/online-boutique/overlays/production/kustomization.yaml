@@ -9,6 +9,8 @@ resources:
   - allow-frontend.yaml
   - allow-internal.yaml
   - ingress.yaml
+  - cluster-secret-store.yaml
+  - redis-external-secret.yaml
 patches:
   - target: {kind: Deployment}
     patch: |-

@@ -19,7 +19,23 @@
 Install Istio with the `demo` profile (good for learning/testing) or `minimal` for production.
 *   **Note:** The `demo` profile enables high levels of tracing and access logging, which is useful for debugging but consumes more resources. For production, use `minimal` and customize.
 
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+# Install Istio
+istioctl install --set profile=demo -y
+
+# Label the namespace for sidecar injection
+kubectl label namespace online-boutique istio-injection=enabled
+```
+
+**Bash:**
 ```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
 # Install Istio
 istioctl install --set profile=demo -y
 

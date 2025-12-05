@@ -35,6 +35,21 @@ To ensure security does not hinder velocity, we define clear responsibilities:
 | **Application Team** (Developers) | Focus on business logic. Define the "Base" application manifests (Deployment, Service). Trigger backups and perform self-service recovery. | **Namespace-scoped:** Can deploy to their namespace but cannot alter cluster-wide policies. |
 | **Platform/Security Team** (Admins) | Maintain the "Overlays" that inject security controls. Manage the Control Plane (Istio, Cilium, ArgoCD). Enforce guardrails via Policy-as-Code (Kyverno). | **Cluster-scoped:** Define the rules of the road (e.g., "No root users", "mTLS required"). |
 
+## **1.3. Alignment with CNCF Standards**
+
+This architecture is explicitly designed to meet the **[CNCF Secure Defaults: Cloud Native 8](https://github.com/cncf/tag-security/blob/main/community/resources/security-whitepaper/secure-defaults-cloud-native-8.md)** principles:
+
+| Principle | Our Implementation |
+| :--- | :--- |
+| **1. Make security a design requirement** | We use a "Greenfield" approach where policies (mTLS, AuthZ) are applied *before* the app is deployed. |
+| **2. Secure configuration has best UX** | We use **GitOps (ArgoCD)**. The "secure way" is simply `git push`. No complex manual CLI commands required for developers. |
+| **3. Insecure config is a conscious decision** | We use **Global Deny-All**. Developers must explicitly create an `allow-*.yaml` file to permit traffic. |
+| **4. Transition to secure state is possible** | We demonstrate a phased rollout: Base App -> mTLS -> AuthZ -> Egress Control. |
+| **5. Secure defaults are inherited** | We apply `PeerAuthentication` at the `istio-system` (mesh-wide) level, so all new namespaces inherit mTLS automatically. |
+| **6. Exception lists have first class support** | Our `allow-internal.yaml` and `allow-frontend.yaml` are explicit, version-controlled exception lists. |
+| **7. Protect against pervasive exploits** | We enforce `runAsNonRoot` and `readOnlyRootFilesystem` via Kyverno to kill entire classes of container breakouts. |
+| **8. Security limitations are explainable** | We document our architecture clearly (this document) and explain *why* certain controls (like Egress filtering) are necessary. |
+
 ## **2\. Technology Stack & Roles**
 
 | Domain | Tool | Role & Configuration |
@@ -43,7 +58,7 @@ To ensure security does not hinder velocity, we define clear responsibilities:
 | **Service Mesh** |  **Istio** | mTLS for encryption-in-transit and L7 Authorization Policies999.  |
 | **GitOps** | **ArgoCD** | Automated drift detection and state synchronization10.  |
 | **Secrets** | **External Secrets Operator** | On-demand secret injection and automated rotation from external vaults11.  |
-| **Supply Chain** | **Trivy / Cosign / Syft** | Image scanning, cryptographic signing, and SBOM generation12.  |
+| **Supply Chain** | **Trivy / Cosign / Syft** | Image scanning, cryptographic signing, and SBOM generation (Aligns with [CNCF Secure Software Factory](https://tag-security.cncf.io/community/working-groups/supply-chain-security/secure-software-factory/secure-software-factory/))12.  |
 | **Policy Engine** | **Kyverno** | Admission control to reject insecure, unsigned, or non-compliant workloads13.  |
 | **Runtime Security** | **Falco** | Kernel-level threat detection (e.g., shell access alerts)14.  |
 | **Infra Security** | **Kube-bench** | CIS Benchmark validation for Node and Cluster hardening. |

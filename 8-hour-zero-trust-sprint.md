@@ -10,7 +10,7 @@
 ## **0. Philosophy & Roles**
 
 **The "Greenfield" Approach:**
-We are building a **Secure by Design** environment. We do not deploy the app and *then* secure it. We build the secure enclosure first, then drop the app into it.
+We are building a **Secure by Design** environment, aligned with the **[CNCF Secure Defaults: Cloud Native 8](https://github.com/cncf/tag-security/blob/main/community/resources/security-whitepaper/secure-defaults-cloud-native-8.md)**. We do not deploy the app and *then* secure it. We build the secure enclosure first, then drop the app into it.
 
 **Roles:**
 *   **App Team (You, in Hour 1):** You provide the base application code. You care about features.
@@ -162,16 +162,40 @@ We are building a **Secure by Design** environment. We do not deploy the app and
 
 **Objective:** Inject secrets from Google Secret Manager (No base64 in Git).
 
-1.  **Setup Vault:**
-    *   Create a secret in Google Secret Manager (e.g., `redis-password`).
+1.  **Prerequisite: Configure Pub/Sub (PowerShell):**
+    Secret Manager needs a Pub/Sub topic for rotation notifications and permission to publish to it.
+    ```powershell
+    # 1. Create the topic
+    gcloud pubsub topics create secret-rotation-topic
 
-2.  **Install ESO:**
+    # 2. Get your Project Number
+    $PROJECT_NUMBER = gcloud projects list --filter="project_id=$(gcloud config get-value project)" --format="value(projectNumber)"
+
+    # 3. Ensure Secret Manager Service Agent exists (Critical Step)
+    gcloud beta services identity create --service=secretmanager.googleapis.com --project=$(gcloud config get-value project)
+
+    # 4. Grant permission to Secret Manager Service Agent
+    gcloud pubsub topics add-iam-policy-binding secret-rotation-topic `
+        --member="serviceAccount:service-$PROJECT_NUMBER@gcp-sa-secretmanager.iam.gserviceaccount.com" `
+        --role="roles/pubsub.publisher"
+    ```
+    *   **Note:** Step 3 is required to generate the `service-...@gcp-sa-secretmanager...` identity if it doesn't exist yet.
+
+2.  **Setup Vault (Web Interface):**
+    *   Navigate to **Security > Secret Manager** in the Google Cloud Console.
+    *   Create a secret named `redis-password`.
+    *   **Rotation & Notifications:**
+        *   Enable **Rotation** and set a period (e.g., 30 days).
+        *   *Important:* Secret Manager sends notifications to **Pub/Sub**; it does not automatically change the value without a configured rotator (Cloud Function).
+        *   **Requirement:** Select the `secret-rotation-topic` you created above.
+
+3.  **Install ESO:**
     ```powershell
     helm repo add external-secrets https://charts.external-secrets.io
     helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
     ```
 
-3.  **Bind Identity:**
+4.  **Bind Identity:**
     *   Follow `walkthroughs/04-secrets-management.md` to bind your GKE ServiceAccount to your GCP Service Account.
     *   **Verify:** `kubectl get secret redis-secret` should show the value from GCP.
 
@@ -189,7 +213,7 @@ We are building a **Secure by Design** environment. We do not deploy the app and
 
 ## **Hour 7: Policy as Code (Kyverno)**
 
-**Objective:** Block insecure pods.
+**Objective:** Block insecure pods (CNCF Secure Software Factory "Admission Controller").
 
 1.  **Install Kyverno (Securely):**
     ```powershell

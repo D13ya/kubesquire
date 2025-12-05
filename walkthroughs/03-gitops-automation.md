@@ -17,9 +17,28 @@
 ### Step 1.1: Deploy ArgoCD
 We install ArgoCD in its own namespace.
 
-```bash
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Secure Practice: Download, Inspect, Apply
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml" -OutFile "argocd-install.yaml"
+kubectl apply -n argocd -f argocd-install.yaml
+```
+
+**Bash:**
+```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+kubectl create namespace argocd
+
+# Secure Practice: Download, Inspect, Apply
+curl -o argocd-install.yaml https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argocd -f argocd-install.yaml
 ```
 
 ### Step 1.2: Access the UI
@@ -30,6 +49,15 @@ For local testing, use port-forwarding. For production, configure an Ingress.
 kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 # Get the initial admin password
+
+**PowerShell:**
+```powershell
+$secret = kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}"
+[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secret))
+```
+
+**Bash:**
+```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 

@@ -16,8 +16,24 @@
 
 We will replace the default `redis` deployment with a secure Postgres cluster (as an example of stateful rigor, though the demo uses Redis primarily).
 
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+# Secure Practice: Download, Inspect, Apply
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.22.0.yaml" -OutFile "cnpg-install.yaml"
+kubectl apply -f cnpg-install.yaml
+```
+
+**Bash:**
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.22.0.yaml
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+# Secure Practice: Download, Inspect, Apply
+curl -o cnpg-install.yaml https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.22.0.yaml
+kubectl apply -f cnpg-install.yaml
 ```
 
 ## 2. Deploy a Secure Postgres Cluster
@@ -74,6 +90,13 @@ kubectl exec -it secure-db-1 -n online-boutique -- psql -U appuser app
 ### Step 3.2: Verify Workload Identity
 Ensure the pod can access the backup bucket without explicit access keys in the pod environment variables.
 *   Check the logs of the instance to see if WAL archiving to the object store is successful.
+    
+    **PowerShell:**
+    ```powershell
+    kubectl logs secure-db-1 -n online-boutique | Select-String "archived WAL file"
+    ```
+
+    **Bash:**
     ```bash
     kubectl logs secure-db-1 -n online-boutique | grep "archived WAL file"
     ```

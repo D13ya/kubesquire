@@ -83,9 +83,10 @@ gcloud config set project $env:PROJECT_ID
 # Create the cluster
 gcloud container clusters create zero-trust-cluster `
     --zone us-central1-a `
+    --machine-type=e2-standard-2 `
     --workload-pool="${env:PROJECT_ID}.svc.id.goog" `
-    --enable-autoscaling --min-nodes=1 --max-nodes=4 `
-    --num-nodes=1
+    --enable-autoscaling --min-nodes=2 --max-nodes=4 `
+    --num-nodes=2
 ```
 
 ### Step 2.3: Connect to the Cluster

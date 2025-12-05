@@ -19,18 +19,42 @@
 We will use `kpt` to fetch the upstream Online Boutique and `Kustomize` to apply security overlays without modifying upstream code.
 
 ### Step 1.1: Fetch the Upstream Package
+We need to get the base manifests from Google's repository.
+
+**Option A: Using `kpt` (Recommended if you have Docker/WSL)**
 ```bash
 mkdir -p apps/online-boutique
 cd apps/online-boutique
-
-# Fetch the latest version of Online Boutique using kpt
-# Reference: https://kpt.dev/reference/cli/pkg/get/
 kpt pkg get https://github.com/GoogleCloudPlatform/microservices-demo/kustomize@main base
+```
+
+**Option B: Using `git clone` (Windows PowerShell Alternative)**
+If you cannot run `kpt`, you can manually clone the repo and copy the folder.
+```powershell
+# 1. Clone the repo to a temporary location
+git clone https://github.com/GoogleCloudPlatform/microservices-demo.git temp-repo
+
+# 2. Create your app directory
+New-Item -ItemType Directory -Force apps/online-boutique
+
+# 3. Copy the 'kustomize' folder to 'apps/online-boutique/base'
+Copy-Item -Recurse temp-repo/kustomize apps/online-boutique/base
+
+# 4. Cleanup
+Remove-Item -Recurse -Force temp-repo
+cd apps/online-boutique
 ```
 
 ### Step 1.2: Create the Overlay Structure
 Create a directory structure for your environment overlays (e.g., `production`).
 
+**PowerShell:**
+```powershell
+New-Item -ItemType Directory -Force overlays/production
+New-Item overlays/production/kustomization.yaml
+```
+
+**Bash:**
 ```bash
 mkdir -p overlays/production
 touch overlays/production/kustomization.yaml

@@ -18,7 +18,19 @@ Many Operators request `cluster-admin` by default. We must verify if they actual
 ### Step 1.1: Check ClusterRoleBindings
 List who has `cluster-admin`.
 
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+kubectl get clusterrolebindings -o json | ConvertFrom-Json | Where-Object { $_.roleRef.name -eq "cluster-admin" } | Select-Object -ExpandProperty subjects | Select-Object -ExpandProperty name
+```
+
+**Bash:**
 ```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
 kubectl get clusterrolebindings -o json | jq -r '.items[] | select(.roleRef.name=="cluster-admin") | .subjects[] | .name'
 ```
 *Output should be minimal (e.g., `system:masters`, `cluster-admin`). If you see `argocd-server` or `external-secrets`, investigate.*

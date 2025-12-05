@@ -14,7 +14,20 @@
 
 ## 1. Install External Secrets Operator (ESO)
 
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+helm repo add external-secrets https://charts.external-secrets.io
+helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
+```
+
+**Bash:**
 ```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
 helm repo add external-secrets https://charts.external-secrets.io
 helm install external-secrets external-secrets/external-secrets -n external-secrets --create-namespace
 ```
@@ -26,21 +39,32 @@ This example uses Google Secret Manager. For AWS or Azure, refer to the provider
 ### Step 2.1: Create a Service Account (GCP)
 Ensure your GKE nodes or a specific Workload Identity ServiceAccount has permissions to access Secret Manager (`roles/secretmanager.secretAccessor`).
 
-**Workload Identity Setup (GKE Example):**
-1.  Create a GCP Service Account (GSA).
-2.  Grant `roles/secretmanager.secretAccessor` to the GSA.
-3.  Bind the GSA to the Kubernetes Service Account (KSA) `external-secrets` in the `external-secrets` namespace.
-    ```bash
-    gcloud iam service-accounts add-iam-policy-binding $GSA_EMAIL \
-        --role roles/iam.workloadIdentityUser \
-        --member "serviceAccount:$PROJECT_ID.svc.id.goog[external-secrets/external-secrets]"
-    ```
-4.  Annotate the KSA:
-    ```bash
-    kubectl annotate serviceaccount external-secrets \
-        --namespace external-secrets \
-        iam.gke.io/gcp-service-account=$GSA_EMAIL
-    ```
+**Workload Identity Setup (PowerShell):**
+Run this block to configure the identity binding:
+```powershell
+$PROJECT_ID = "kubesquire"
+$GSA_NAME = "external-secrets-sa"
+$GSA_EMAIL = "$GSA_NAME@$PROJECT_ID.iam.gserviceaccount.com"
+
+# 1. Create GCP Service Account
+gcloud iam service-accounts create $GSA_NAME --project $PROJECT_ID
+
+# 2. Grant Secret Accessor Permission
+gcloud projects add-iam-policy-binding $PROJECT_ID `
+    --member "serviceAccount:$GSA_EMAIL" `
+    --role "roles/secretmanager.secretAccessor"
+
+# 3. Bind Workload Identity
+gcloud iam service-accounts add-iam-policy-binding $GSA_EMAIL `
+    --role roles/iam.workloadIdentityUser `
+    --member "serviceAccount:${PROJECT_ID}.svc.id.goog[external-secrets/external-secrets]"
+
+# 4. Annotate Kubernetes Service Account
+kubectl annotate serviceaccount external-secrets `
+    --namespace external-secrets `
+    iam.gke.io/gcp-service-account=$GSA_EMAIL `
+    --overwrite
+```
 
 ### Step 2.2: Define ClusterSecretStore
 This resource tells ESO *how* to connect to your vault.
@@ -54,11 +78,11 @@ metadata:
 spec:
   provider:
     gcpsm:
-      projectID: "your-gcp-project-id" # <--- UPDATE THIS
+      projectID: "kubesquire"
       auth:
         workloadIdentity:
-          clusterLocation: "us-central1" # <--- UPDATE THIS
-          clusterName: "your-cluster-name" # <--- UPDATE THIS
+          clusterLocation: "us-central1-a"
+          clusterName: "zero-trust-cluster"
           serviceAccountRef:
             name: "external-secrets"
             namespace: "external-secrets"

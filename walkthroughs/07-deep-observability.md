@@ -14,13 +14,33 @@
 
 If you installed Cilium in Phase 2, enable Hubble for visibility.
 
+**PowerShell:**
+```powershell
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
+cilium hubble enable --ui
+```
+
+**Bash:**
 ```bash
+# Ensure you are connected to the cluster
+gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
+
 cilium hubble enable --ui
 ```
 
 ## 2. Verify Policy Enforcement
 
 ### Step 2.1: Access Hubble UI
+
+**PowerShell:**
+```powershell
+cilium hubble ui
+# Opens in browser at localhost:12000
+```
+
+**Bash:**
 ```bash
 cilium hubble ui
 # Opens in browser at localhost:12000
@@ -55,6 +75,13 @@ helm install tetragon cilium/tetragon -n kube-system
 ### Step 3.2: Detect Shell Access
 Tetragon logs when a shell is spawned in a container (a common attack vector).
 
+**PowerShell:**
+```powershell
+# Tail logs for process execution
+kubectl logs -n kube-system -l app.kubernetes.io/name=tetragon -c export-stdout -f | Select-String "process_exec"
+```
+
+**Bash:**
 ```bash
 # Tail logs for process execution
 kubectl logs -n kube-system -l app.kubernetes.io/name=tetragon -c export-stdout -f | grep "process_exec"
