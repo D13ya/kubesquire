@@ -5,6 +5,7 @@ resources:
   - ../../base
   - namespace.yaml
   - peer-auth.yaml
+  - deny-all.yaml
 patches:
   - target: {kind: Deployment}
     patch: |-
