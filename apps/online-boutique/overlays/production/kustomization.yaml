@@ -4,6 +4,7 @@ namespace: online-boutique
 resources: 
   - ../../base
   - namespace.yaml
+  - peer-auth.yaml
 patches:
   - target: {kind: Deployment}
     patch: |-
