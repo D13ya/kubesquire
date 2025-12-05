@@ -115,13 +115,13 @@ We are building a **Secure by Design** environment. We do not deploy the app and
     kubectl rollout restart deploy -n online-boutique
     ```
 
-2.  **Enforce Strict mTLS (GitOps Way):**
+2.  **Enforce Strict mTLS (Mesh-Wide):**
     *   **Create Policy:**
-        Create `apps/online-boutique/overlays/production/peer-auth.yaml`:
+        Create `apps/online-boutique/overlays/production/peer-auth.yaml`. We apply this to `istio-system` to enforce it for the entire cluster (Greenfield approach).
     ```yaml
     apiVersion: security.istio.io/v1beta1
     kind: PeerAuthentication
-    metadata: {name: default, namespace: online-boutique}
+    metadata: {name: default, namespace: istio-system}
     spec: {mtls: {mode: STRICT}}
     ```
     *   **Update Kustomization:**
