@@ -35,6 +35,8 @@ The architecture adheres to core Zero Trust tenets:
 
 **3\. Implementation Phases**
 
+Each phase below is framed as a long-term control, not a short-lived patch. Every control is baked into templates, enforced by policy/automation, and tied to evidence so regression is detectable.
+
 ### **Phase 1: The Secure Supply Chain (Design)**
 
 *Objective: Ensure no untrusted artifacts enter the cluster.*
@@ -80,6 +82,7 @@ The architecture adheres to core Zero Trust tenets:
 * **The Fix:** Implement **ArgoCD** or **Flux**. The "Template" becomes a Git repository23.
 
 * **Outcome:** ArgoCD ensures the cluster state matches the secure Git template. If an attacker manually alters a NetworkPolicy, ArgoCD automatically reverts the change24.
+* **Long-term signal:** Enable ArgoCD application health alerts and signed commits/tags; schedule weekly drift reports as artifacts to demonstrate continuous enforcement.
 
 ### **Phase 4: Zero Trust Secrets Management**
 
@@ -124,6 +127,7 @@ The architecture adheres to core Zero Trust tenets:
 * **The Fix:** Enable **Hubble** (via Cilium) or **Tetragon**31.
 
 * **Outcome:** Generate dependency maps showing exactly which services attempted communication and which packets were dropped by Zero Trust policies. This provides the audit logs necessary for compliance32.
+* **Long-term signal:** Retain flow logs and authz decisions with retention aligned to audit requirements; add recurring reviews of dropped flows to catch unintended dependencies before they become outages.
 
 ### **Phase 7: Infrastructure Hardening & Human Access**
 
@@ -132,6 +136,7 @@ The architecture adheres to core Zero Trust tenets:
 * **The Problem:** Zero Trust often overlooks the Node OS and human administrators. A compromised node compromises all pods on it.
 * **The Fix \- Node Hardening:** Run **Kube-bench** regularly to validate compliance with CIS Kubernetes Benchmarks. Use a minimal OS (e.g., Bottlerocket, COS) to reduce the attack surface.
 * **The Fix \- Human Access:** Eliminate long-lived `kubeconfig` files. Use OIDC (e.g., Dex, Keycloak) for authentication. Implement Just-in-Time (JIT) access for emergency "break-glass" scenarios, where elevated permissions are granted temporarily and audited.
+* **Long-term signal:** Automate CIS scans and OIDC/JIT access audits; publish recurring reports of role usage and node hardening drift to demonstrate sustained posture.
 
 ### **Phase 8: Operator Security & Auditing**
 
