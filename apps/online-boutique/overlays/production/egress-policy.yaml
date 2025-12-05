@@ -5,29 +5,53 @@ metadata:
   namespace: online-boutique
 spec:
   endpointSelector:
-    matchLabels: {} # Select all pods in namespace
+    matchLabels: {} # Applies to all pods in the namespace
   egress:
-  # Allow DNS (Required for resolving external names)
-  - toEndpoints:
-    - matchLabels:
-        k8s-app: kube-dns
-        io.kubernetes.pod.namespace: kube-system
-    toPorts:
-    - ports:
-      - port: "53"
-        protocol: UDP
-      - port: "53"
-        protocol: TCP
-  # Allow Google APIs (for Monitoring/Tracing)
-  # Note: This requires Cilium DNS Proxy to be enabled
-  - toFQDNs:
-    - matchName: "monitoring.googleapis.com"
-    - matchName: "cloudtrace.googleapis.com"
-    toPorts:
-    - ports:
-      - port: "443"
-        protocol: TCP
-  # Allow intra-namespace traffic (Microservices talking to each other)
-  - toEndpoints:
-    - matchLabels:
-        io.kubernetes.pod.namespace: online-boutique
+    # ---------------------------------------------------------
+    # 1. Core Infrastructure: DNS
+    # ---------------------------------------------------------
+    # Required to resolve internal services and external APIs.
+    - toEndpoints:
+      - matchLabels:
+          io.kubernetes.pod.namespace: kube-system
+          k8s-app: kube-dns
+      toPorts:
+      - ports:
+        - port: "53"
+          protocol: UDP
+        - port: "53"
+          protocol: TCP
+
+    # ---------------------------------------------------------
+    # 2. Application Logic: Intra-Namespace Communication
+    # ---------------------------------------------------------
+    # Allows microservices to communicate with each other.
+    # (e.g., Frontend -> CartService, CheckoutService -> EmailService)
+    - toEndpoints:
+      - matchLabels:
+          io.kubernetes.pod.namespace: online-boutique
+
+    # ---------------------------------------------------------
+    # 3. Identity & Auth: GKE Metadata Server
+    # ---------------------------------------------------------
+    # Required for Workload Identity (getting GCP tokens).
+    # Client libraries hit http://169.254.169.254 to authenticate.
+    - toCIDR:
+      - "169.254.169.254/32"
+      toPorts:
+      - ports:
+        - port: "80"
+          protocol: TCP
+
+    # ---------------------------------------------------------
+    # 4. Observability: Google Cloud APIs
+    # ---------------------------------------------------------
+    # Allows pods to send metrics and traces to Google Cloud.
+    - toFQDNs:
+      - matchName: "monitoring.googleapis.com"
+      - matchName: "cloudtrace.googleapis.com"
+      - matchName: "logging.googleapis.com"
+      toPorts:
+      - ports:
+        - port: "443"
+          protocol: TCP
