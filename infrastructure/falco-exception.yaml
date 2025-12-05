@@ -1,0 +1,20 @@
+apiVersion: kyverno.io/v2
+kind: PolicyException
+metadata:
+  name: allow-falco-root
+  namespace: kyverno
+spec:
+  exceptions:
+  - policyName: require-non-root
+    ruleNames:
+    - check-run-as-non-root
+    - autogen-check-run-as-non-root
+  match:
+    any:
+    - resources:
+        kinds:
+        - DaemonSet
+        - Deployment
+        - Pod
+        namespaces:
+        - falco

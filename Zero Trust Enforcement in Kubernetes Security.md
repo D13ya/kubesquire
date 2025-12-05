@@ -46,7 +46,7 @@ This architecture is explicitly designed to meet the **[CNCF Secure Defaults: Cl
 | **3. Insecure config is a conscious decision** | We use **Global Deny-All**. Developers must explicitly create an `allow-*.yaml` file to permit traffic. |
 | **4. Transition to secure state is possible** | We demonstrate a phased rollout: Base App -> mTLS -> AuthZ -> Egress Control. |
 | **5. Secure defaults are inherited** | We apply `PeerAuthentication` at the `istio-system` (mesh-wide) level, so all new namespaces inherit mTLS automatically. |
-| **6. Exception lists have first class support** | Our `allow-internal.yaml` and `allow-frontend.yaml` are explicit, version-controlled exception lists. |
+| **6. Exception lists have first class support** | Our `allow-internal.yaml`, `allow-frontend.yaml`, and `falco-exception.yaml` are explicit, version-controlled exception lists. |
 | **7. Protect against pervasive exploits** | We enforce `runAsNonRoot` and `readOnlyRootFilesystem` via Kyverno to kill entire classes of container breakouts. |
 | **8. Security limitations are explainable** | We document our architecture clearly (this document) and explain *why* certain controls (like Egress filtering) are necessary. |
 

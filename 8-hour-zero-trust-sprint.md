@@ -225,6 +225,10 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
 
     # 2. Apply from local
     kubectl create -f infrastructure/kyverno-install.yaml
+    
+    # 3. (Critical) Enable Policy Exceptions
+    # We must tell Kyverno where to look for PolicyException resources.
+    kubectl patch deployment kyverno-admission-controller -n kyverno --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--exceptionNamespace=kyverno"}]'
     ```
 
 2.  **Enforce Standards:**
@@ -269,10 +273,18 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
     *   `cilium hubble ui`
     *   Look for **Red Lines** (Blocked Traffic).
 
-2.  **Falco (Optional):**
-    *   Install Falco.
-    *   Exec into a pod and run `cat /etc/shadow`.
-    *   Check logs for "Notice: Read sensitive file".
+2.  **Falco (Runtime Security):**
+    *   **Allow Privileged Access:** Falco needs root, so we must exempt it from our Kyverno policy.
+        *   `kubectl apply -f infrastructure/falco-exception.yaml`
+    *   **Install:**
+        *   `helm repo add falcosecurity https://falcosecurity.github.io/charts`
+        *   `helm install falco falcosecurity/falco --namespace falco --create-namespace`
+    *   **Tuning (For Small Clusters):** If Falco pods hang in "Pending", reduce their CPU reservation:
+        *   `kubectl patch daemonset falco -n falco --type='json' -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/resources/requests/cpu", "value": "10m"}]'`
+    *   **Test:**
+        *   Exec into a pod: `kubectl exec -it -n online-boutique <pod-name> -- sh`
+        *   Trigger rule: `cat /etc/shadow`
+        *   Check logs: `kubectl logs -l app.kubernetes.io/name=falco -n falco | Select-String "Sensitive"`
 
 ---
 
