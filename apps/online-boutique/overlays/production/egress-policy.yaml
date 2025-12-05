@@ -10,7 +10,6 @@ spec:
     # ---------------------------------------------------------
     # 1. Core Infrastructure: DNS
     # ---------------------------------------------------------
-    # Required to resolve internal services and external APIs.
     - toEndpoints:
       - matchLabels:
           io.kubernetes.pod.namespace: kube-system
@@ -25,8 +24,6 @@ spec:
     # ---------------------------------------------------------
     # 2. Application Logic: Intra-Namespace Communication
     # ---------------------------------------------------------
-    # Allows microservices to communicate with each other.
-    # (e.g., Frontend -> CartService, CheckoutService -> EmailService)
     - toEndpoints:
       - matchLabels:
           io.kubernetes.pod.namespace: online-boutique
@@ -34,8 +31,6 @@ spec:
     # ---------------------------------------------------------
     # 3. Identity & Auth: GKE Metadata Server
     # ---------------------------------------------------------
-    # Required for Workload Identity (getting GCP tokens).
-    # Client libraries hit http://169.254.169.254 to authenticate.
     - toCIDR:
       - "169.254.169.254/32"
       toPorts:
@@ -46,7 +41,6 @@ spec:
     # ---------------------------------------------------------
     # 4. Observability: Google Cloud APIs
     # ---------------------------------------------------------
-    # Allows pods to send metrics and traces to Google Cloud.
     - toFQDNs:
       - matchName: "monitoring.googleapis.com"
       - matchName: "cloudtrace.googleapis.com"
@@ -55,3 +49,14 @@ spec:
       - ports:
         - port: "443"
           protocol: TCP
+
+    # ---------------------------------------------------------
+    # 5. Service Mesh: Istio Control Plane
+    # ---------------------------------------------------------
+    - toEndpoints:
+      - matchLabels:
+          io.kubernetes.pod.namespace: istio-system
+    - toServices:
+      - k8sService:
+          serviceName: istiod
+          namespace: istio-system
