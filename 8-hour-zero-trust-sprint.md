@@ -228,8 +228,36 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
     ```
 
 2.  **Enforce Standards:**
-    *   Apply a `ClusterPolicy` requiring `runAsNonRoot: true`.
-    *   **Test:** Try to deploy a "bad" pod (root user). Kyverno should block it.
+    *   Create and apply `infrastructure/require-non-root.yaml`:
+        ```yaml
+        apiVersion: kyverno.io/v1
+        kind: ClusterPolicy
+        metadata:
+          name: require-non-root
+        spec:
+          validationFailureAction: Enforce
+          background: true
+          rules:
+          - name: check-run-as-non-root
+            match:
+              any:
+              - resources:
+                  kinds:
+                  - Pod
+            validate:
+              message: "Running as root is not allowed. Set runAsNonRoot: true."
+              pattern:
+                spec:
+                  containers:
+                  - securityContext:
+                      runAsNonRoot: true
+        ```
+    *   `kubectl apply -f infrastructure/require-non-root.yaml`
+
+3.  **Verify:**
+    *   Create `infrastructure/bad-pod.yaml` (running as root) and try to apply it.
+    *   `kubectl apply -f infrastructure/bad-pod.yaml` -> **Should Fail**.
+    *   The existing Online Boutique pods should continue running (as we patched them in Hour 1).
 
 ---
 
