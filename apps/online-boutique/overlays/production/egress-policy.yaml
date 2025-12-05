@@ -25,3 +25,7 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Allow intra-namespace traffic (Microservices talking to each other)
+  - toEndpoints:
+    - matchLabels:
+        io.kubernetes.pod.namespace: online-boutique
