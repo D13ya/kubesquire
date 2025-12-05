@@ -1,0 +1,32 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-frontend-to-backends
+  namespace: online-boutique
+spec:
+  # Applies to all workloads in the namespace
+  # Allows 'frontend' to access them
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/online-boutique/sa/frontend"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-access-to-frontend
+  namespace: online-boutique
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  action: ALLOW
+  rules:
+  # Allow LoadGenerator (Internal Traffic)
+  - from:
+    - source:
+        principals: ["cluster.local/ns/online-boutique/sa/loadgenerator"]
+  # Allow Ingress Gateway (if it exists/is added later)
+  - from:
+    - source:
+        principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
