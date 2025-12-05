@@ -142,4 +142,8 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Allow Localhost (Required for Istio Sidecar Communication)
+  # Without this, the application container cannot talk to the envoy proxy
+  - toCIDR:
+    - "127.0.0.1/32"
 ```

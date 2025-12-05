@@ -23,7 +23,13 @@ The package ID is case-sensitive.
 winget install argoproj.argocd
 ```
 
-**3. Istio CLI (Manual Install - Long Term Solution)**
+**3. Cilium CLI**
+Required for Network Policies and Hubble observability.
+```powershell
+winget install Cilium.CiliumCLI
+```
+
+**4. Istio CLI (Manual Install - Long Term Solution)**
 *Since Istio does not have a Windows installer, we will create a dedicated "Tools" folder. This is a best practice for managing standalone binaries on Windows.*
 
 1.  **Create a Tools Folder:**
@@ -94,7 +100,14 @@ gcloud container clusters create zero-trust-cluster `
 gcloud container clusters get-credentials zero-trust-cluster --zone us-central1-a
 ```
 
-### Step 2.4: Verify Everything
+### Step 2.4: Install Cilium CNI
+Since we are not using GKE Dataplane V2, we must install Cilium manually to enable Network Policies.
+```powershell
+cilium install --set cluster.name=zero-trust-cluster
+cilium status --wait
+```
+
+### Step 2.5: Verify Everything
 Run this command. If you see version numbers and nodes, you are ready.
 ```powershell
 Write-Host "--- Checking Tools ---"

@@ -12,8 +12,8 @@ spec:
     # ---------------------------------------------------------
     - toEndpoints:
       - matchLabels:
-          io.kubernetes.pod.namespace: kube-system
-          k8s-app: kube-dns
+          "k8s:io.kubernetes.pod.namespace": kube-system
+          "k8s:k8s-app": kube-dns
       toPorts:
       - ports:
         - port: "53"
@@ -26,7 +26,7 @@ spec:
     # ---------------------------------------------------------
     - toEndpoints:
       - matchLabels:
-          io.kubernetes.pod.namespace: online-boutique
+          "k8s:io.kubernetes.pod.namespace": online-boutique
 
     # ---------------------------------------------------------
     # 3. Identity & Auth: GKE Metadata Server
@@ -51,12 +51,23 @@ spec:
           protocol: TCP
 
     # ---------------------------------------------------------
-    # 5. Service Mesh: Istio Control Plane
+    # 5. Service Mesh: Istio Control Plane & Ingress
     # ---------------------------------------------------------
     - toEndpoints:
       - matchLabels:
-          io.kubernetes.pod.namespace: istio-system
+          "k8s:io.kubernetes.pod.namespace": istio-system
+      - matchLabels:
+          "k8s:app": istio-ingressgateway
+      - matchLabels:
+          "k8s:istio": ingressgateway
     - toServices:
       - k8sService:
           serviceName: istiod
           namespace: istio-system
+
+    # ---------------------------------------------------------
+    # 6. Localhost (Required for Istio Sidecar)
+    # Reference: https://github.com/cilium/cilium/issues/18465
+    # ---------------------------------------------------------
+    - toCIDR:
+      - "127.0.0.1/32"

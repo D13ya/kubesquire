@@ -206,7 +206,10 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
 **Objective:** Stop data exfiltration (Egress).
 
 1.  **Lock Down Egress:**
-    *   Apply a `CiliumNetworkPolicy` that denies all egress except DNS (53) and Google APIs (443).
+    *   Apply a `CiliumNetworkPolicy` that denies all egress except:
+        *   DNS (53)
+        *   Google APIs (443)
+        *   **Localhost (127.0.0.1/32):** Critical for Istio sidecar communication.
     *   **Test:** Exec into a pod and try `curl google.com`. It should hang/fail.
 
 ---
