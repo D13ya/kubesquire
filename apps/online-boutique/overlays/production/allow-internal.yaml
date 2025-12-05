@@ -132,3 +132,19 @@ spec:
   - from:
     - source:
         principals: ["cluster.local/ns/online-boutique/sa/frontend"]
+
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-checkout
+  namespace: online-boutique
+spec:
+  selector:
+    matchLabels:
+      app: checkoutservice
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/online-boutique/sa/frontend"]

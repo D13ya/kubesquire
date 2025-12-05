@@ -288,5 +288,15 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
 
 ---
 
-**Next Steps:**
-You have completed the sprint! For detailed debugging, refer to the `walkthroughs/` folder.
+**Next Steps & Future Work:**
+You have completed the core runtime security sprint! However, a true Zero Trust environment also requires securing the supply chain and stateful workloads.
+
+*   **Read the Whitepapers:**
+    *   [Data on Kubernetes (Database Security)](data-on-kubernetes-whitepaper-databases.md)
+    *   [Operator Security](Operator-WhitePaper_v1-0.md)
+*   **Future Phases (Not covered in this sprint):**
+    *   **Phase 1:** Secure Supply Chain (Image Signing with Cosign).
+    *   **Phase 5:** Stateful Operators (Redis Operator).
+    *   **Phase 9:** Operator Security Auditing.
+
+For detailed debugging of the steps you just performed, refer to the `walkthroughs/` folder.

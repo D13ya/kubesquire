@@ -242,7 +242,9 @@ This project will generate the following artifacts34:
 *   **Kong:** 5 Best Practices for Securing Microservices40.
 
 *   **CNCF:** Data on Kubernetes Whitepaper (Database Patterns)  
+    [data-on-kubernetes-whitepaper-databases.md](data-on-kubernetes-whitepaper-databases.md)
     *Reference for securing stateful workloads (TLS, Encryption at Rest).*
 
 *   **CNCF:** Operator White Paper  
+    [Operator-WhitePaper_v1-0.md](Operator-WhitePaper_v1-0.md)
     *Reference for securing Operators and understanding their lifecycle.*  
