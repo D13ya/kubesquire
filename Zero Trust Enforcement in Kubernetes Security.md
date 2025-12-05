@@ -18,6 +18,23 @@ The architecture adheres to core Zero Trust tenets:
 
 * **Runtime Assurance:** Continuous threat detection via Falco7.
 
+## **1.1. Philosophy: "Greenfield" Zero Trust**
+
+This project adopts a **"Greenfield" (Security by Design)** approach. Unlike "Brownfield" deployments where security is bolted on after the application is running, we enforce security controls *before* the first pod is deployed.
+
+*   **Shift Left:** Security policies (NetworkPolicies, mTLS, RBAC) are defined in the Git repository alongside the application code.
+*   **Deny-by-Default:** The environment is locked down from day one. Traffic is blocked unless explicitly allowed.
+*   **Immutable Infrastructure:** No manual changes via `kubectl`. The Git repository is the single source of truth.
+
+## **1.2. Operational Roles**
+
+To ensure security does not hinder velocity, we define clear responsibilities:
+
+| Role | Responsibility | Scope |
+| :--- | :--- | :--- |
+| **Application Team** (Developers) | Focus on business logic. Define the "Base" application manifests (Deployment, Service). Trigger backups and perform self-service recovery. | **Namespace-scoped:** Can deploy to their namespace but cannot alter cluster-wide policies. |
+| **Platform/Security Team** (Admins) | Maintain the "Overlays" that inject security controls. Manage the Control Plane (Istio, Cilium, ArgoCD). Enforce guardrails via Policy-as-Code (Kyverno). | **Cluster-scoped:** Define the rules of the road (e.g., "No root users", "mTLS required"). |
+
 ## **2\. Technology Stack & Roles**
 
 | Domain | Tool | Role & Configuration |
@@ -120,7 +137,7 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
 * **Zero Trust Integration:** Implement a "Canary" strategy (e.g., 5% traffic). Use Prometheus and Falco metrics to gate the rollout. If Falco detects a security anomaly (e.g., "shell in container") in the canary, the rollout aborts automatically30.
   * *Guardrails:* Define rollback triggers (e.g., error budget burn rate, AuthZ deny spikes, Falco alerts) and timeouts so failed canaries halt quickly and revert.
 
-### **Phase 6: Deep Observability (Verification)**
+### **Phase 7: Deep Observability (Verification)**
 
 *Objective: Prove that policies are working ("Never Trust, Always Verify").*
 
@@ -129,7 +146,7 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
 * **Outcome:** Generate dependency maps showing exactly which services attempted communication and which packets were dropped by Zero Trust policies. This provides the audit logs necessary for compliance32.
 * **Long-term signal:** Retain flow logs and authz decisions with retention aligned to audit requirements; add recurring reviews of dropped flows to catch unintended dependencies before they become outages.
 
-### **Phase 7: Infrastructure Hardening & Human Access**
+### **Phase 8: Infrastructure Hardening & Human Access**
 
 *Objective: Secure the underlying platform and human interactions.*
 
@@ -138,7 +155,7 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
 * **The Fix \- Human Access:** Eliminate long-lived `kubeconfig` files. Use OIDC (e.g., Dex, Keycloak) for authentication. Implement Just-in-Time (JIT) access for emergency "break-glass" scenarios, where elevated permissions are granted temporarily and audited.
 * **Long-term signal:** Automate CIS scans and OIDC/JIT access audits; publish recurring reports of role usage and node hardening drift to demonstrate sustained posture.
 
-### **Phase 8: Operator Security & Auditing**
+### **Phase 9: Operator Security & Auditing**
 
 *Objective: Secure the tools that secure the cluster.*
 

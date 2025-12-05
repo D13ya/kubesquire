@@ -7,6 +7,17 @@
 
 ---
 
+## **0. Philosophy & Roles**
+
+**The "Greenfield" Approach:**
+We are building a **Secure by Design** environment. We do not deploy the app and *then* secure it. We build the secure enclosure first, then drop the app into it.
+
+**Roles:**
+*   **App Team (You, in Hour 1):** You provide the base application code. You care about features.
+*   **Platform Team (You, in Hours 2-8):** You wrap that code in security policies (mTLS, NetworkPolicies) without changing the app code itself. You care about compliance and stability.
+
+---
+
 ## **Hour 1: The Secure Foundation (Templating)**
 
 **Objective:** Download the app and wrap it with security policies.
@@ -73,11 +84,13 @@
     ```
 
 2.  **Connect App:**
-    *   Create a file `argocd-app.yaml` pointing to **your** repo URL.
-    *   `kubectl apply -f argocd-app.yaml`
+    *   **Action:** Create a file `infrastructure/argocd-app.yaml` pointing to **your** repo URL. This tells ArgoCD where to find the Kustomize overlay we built in Hour 1.
+    *   **Important:** Ensure you have pushed your `apps/` folder to GitHub before running this, or ArgoCD will report a "Path not found" error.
+    *   `kubectl apply -f infrastructure/argocd-app.yaml`
 
 3.  **Verify:**
     *   Get the admin password:
+    *   *Note: This retrieves the unique, auto-generated password for your specific installation. In production, you would replace this with SSO.*
     ```powershell
     $secret = kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}"
     [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($secret))
@@ -89,23 +102,37 @@
 
 **Objective:** Encrypt all traffic (mTLS).
 
-1.  **Install Istio:**
+1.  **Install Istio & Enable Injection (GitOps Way):**
+    *   **Install Istio:**
     ```powershell
     istioctl install --set profile=minimal -y
-    kubectl label ns online-boutique istio-injection=enabled
-    # Restart pods to inject sidecars
+    ```
+    *   **Enable Sidecar Injection:**
+        Instead of manually labeling, we added a `namespace.yaml` to our Kustomize overlay in `apps/online-boutique/overlays/production/`.
+        *   *Check:* `kubectl get ns online-boutique --show-labels` should show `istio-injection=enabled`.
+    *   **Restart Pods:**
+    ```powershell
     kubectl rollout restart deploy -n online-boutique
     ```
 
-2.  **Enforce Strict mTLS:**
-    *   Create `peer-auth.yaml`:
+2.  **Enforce Strict mTLS (GitOps Way):**
+    *   **Create Policy:**
+        Create `apps/online-boutique/overlays/production/peer-auth.yaml`:
     ```yaml
     apiVersion: security.istio.io/v1beta1
     kind: PeerAuthentication
     metadata: {name: default, namespace: online-boutique}
     spec: {mtls: {mode: STRICT}}
     ```
-    *   `kubectl apply -f peer-auth.yaml`
+    *   **Update Kustomization:**
+        Add `- peer-auth.yaml` to the `resources` list in `apps/online-boutique/overlays/production/kustomization.yaml`.
+    *   **Push & Sync:**
+        ```powershell
+        git add .
+        git commit -m "Enforce Strict mTLS"
+        git push
+        kubectl annotate application online-boutique -n argocd argocd.argoproj.io/refresh=hard --overwrite
+        ```
 
 ---
 
@@ -124,8 +151,9 @@
     *   `kubectl apply -f deny-all.yaml`
     *   **Result:** The app will stop working. This is good!
 
-2.  **Allow Frontend:**
+2.  **Allow Traffic:**
     *   Create `allow-frontend.yaml` to let the frontend talk to services.
+    *   Create `allow-internal.yaml` to allow backend services to communicate (e.g., Cart -> Redis).
     *   (See `walkthroughs/02-identity-segmentation.md` for the full policy list).
 
 ---
