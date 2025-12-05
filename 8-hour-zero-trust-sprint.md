@@ -209,7 +209,7 @@ We are building a **Secure by Design** environment, aligned with the **[CNCF Sec
     *   Apply a `CiliumNetworkPolicy` that denies all egress except:
         *   DNS (53)
         *   Google APIs (443)
-        *   **Localhost (127.0.0.1/32):** Critical for Istio sidecar communication.
+        *   **Localhost (127.0.0.1/32):** Critical for Istio sidecar communication (See [Cilium Issue #18465](https://github.com/cilium/cilium/issues/18465)).
     *   **Test:** Exec into a pod and try `curl google.com`. It should hang/fail.
 
 ---

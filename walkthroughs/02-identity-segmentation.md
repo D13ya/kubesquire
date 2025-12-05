@@ -144,6 +144,7 @@ spec:
         protocol: TCP
   # Allow Localhost (Required for Istio Sidecar Communication)
   # Without this, the application container cannot talk to the envoy proxy
+  # Reference: https://github.com/cilium/cilium/issues/18465
   - toCIDR:
     - "127.0.0.1/32"
 ```

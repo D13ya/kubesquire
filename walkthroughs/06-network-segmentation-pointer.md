@@ -9,5 +9,5 @@ This content is located in `walkthroughs/02-identity-segmentation.md`, Section 3
 
 ## Tasks
 1.  **Lock Down Egress:**
-    *   Apply a `CiliumNetworkPolicy` (or standard `NetworkPolicy`) that denies all egress except DNS (53), Google APIs (443), and **Localhost (127.0.0.1)** (required for Istio).
+    *   Apply a `CiliumNetworkPolicy` (or standard `NetworkPolicy`) that denies all egress except DNS (53), Google APIs (443), and **Localhost (127.0.0.1)** (required for Istio, see [Issue #18465](https://github.com/cilium/cilium/issues/18465)).
     *   **Test:** Exec into a pod and try `curl google.com`. It should hang/fail.
