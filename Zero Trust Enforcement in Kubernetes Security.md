@@ -50,7 +50,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
     *   *GitOps layout:* Create a repo structure such as `apps/online-boutique/base` and `environments/{dev,stage,prod}` overlays. Promotion happens via signed tags or PR merges that bump the overlay reference, keeping a clear audit trail for ArgoCD/Flux to sync.
 
 * **Pre-admission validation:** Add **conftest/OPA** or **Kyverno CLI** checks in CI to lint rendered manifests (from kustomize/helm/kpt) against policy baselines before ArgoCD sees them. This ensures "verify before apply" and blocks insecure configs earlier in the pipeline.
-* **Long-term signal:** Enforce required status checks on PRs so unsigned images or policy violations cannot be merged; publish SBOMs and signature verification results as build artifacts for audit.
 
 * **The Fix \- Image Assurance:** Integrate **Trivy** for build-time scanning and **Cosign** (Sigstore) to sign images.
 * **The Fix \- SBOM:** Generate a Software Bill of Materials (SBOM) using **Syft** during the build. Store it in the registry (OCI artifact). Use **Kyverno** to verify the presence of an SBOM and reject images with forbidden packages (e.g., Log4j vulnerable versions)17.
@@ -73,7 +72,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
   * *Mechanism:* Deny all internet access by default.
   * *Real-World Challenge:* Blocking egress breaks OpenTelemetry and Cloud Trace (used heavily by the demo).
   * *Solution:* Explicitly allow egress to Google Cloud APIs (`monitoring.googleapis.com`, `cloudtrace.googleapis.com`) and the Istio Control Plane via FQDN policies. Integrate egress allowlists into CI so adding a new external dependency requires a reviewed policy change, preventing silent sprawl while preserving observability.
-* **Long-term signal:** Version and sign AuthorizationPolicies/NetworkPolicies; add periodic mesh policy drift scans (e.g., `istioctl authz check`, `cilium hubble observe --since 24h --verdict dropped`) to prove deny-by-default is still enforced.
 
 ### **Phase 3: GitOps & Automation**
 
@@ -98,7 +96,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
 
 * **The Fix \- Automated Rotation:** Configure ESO to poll for changes. When a secret is rotated in the external vault, ESO updates the Kubernetes Secret. Configure the application to watch for file changes (volume mount) or restart the pod (via Reloader) to pick up the new secret immediately.
 * **Secrets lifecycle playbook:** Define rotation frequency targets (e.g., 90 days), break-glass steps for restoring access, and whether apps reload via sidecar reloader or controlled pod restarts so teams know how to react without downtime.
-* **Long-term signal:** Enforce vault-side TTLs and alert on expired/unused secrets; export ESO sync metrics to dashboards so stalled rotations are visible.
 
 ### **Phase 5: Stateful Zero Trust (Databases)**
 
@@ -111,7 +108,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
     *   **Identity:** Use **Workload Identity** for the Operator to access cloud backups (S3/GCS) without static keys.
     *   **Storage:** Enable **Encryption at Rest** on the PersistentVolumes (via StorageClass/KMS).
     *   **Recovery drills:** Schedule periodic backup/restore tests and encryption verification to prove controls work, not just exist.
-* **Long-term signal:** Capture backup success metrics and restore drill reports; enforce database TLS via admission policies and continuous checks (e.g., pg_crypto TLS flags, Redis TLS info) to prevent regressions.
 
 ### **Phase 6: Progressive Delivery**
 
@@ -123,7 +119,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
 
 * **Zero Trust Integration:** Implement a "Canary" strategy (e.g., 5% traffic). Use Prometheus and Falco metrics to gate the rollout. If Falco detects a security anomaly (e.g., "shell in container") in the canary, the rollout aborts automatically30.
   * *Guardrails:* Define rollback triggers (e.g., error budget burn rate, AuthZ deny spikes, Falco alerts) and timeouts so failed canaries halt quickly and revert.
-* **Long-term signal:** Keep rollout SLOs (max canary duration, max error budget burn) in code; export canary decisions and Falco/OPA gate results to dashboards for historical auditing.
 
 ### **Phase 6: Deep Observability (Verification)**
 
@@ -152,7 +147,6 @@ Each phase below is framed as a long-term control, not a short-lived patch. Ever
     *   *Action:* Use **RoleBindings** (Namespace-scoped) instead of ClusterRoleBindings where possible.
     *   *Action:* Monitor Operator logs for anomalous behavior (e.g., accessing secrets it shouldn't).
     *   *Action:* Maintain baseline RBAC templates per operator (ArgoCD, ESO, Istio ingress) and schedule recurring audits to catch privilege creep.
-* **Long-term signal:** Require operator upgrades via signed, reviewed PRs; add periodic RBAC diff reports and Falco rules for operator namespaces so escalations are detected quickly.
 
 ## ---
 
