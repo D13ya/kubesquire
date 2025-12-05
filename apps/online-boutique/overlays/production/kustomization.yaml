@@ -11,6 +11,7 @@ resources:
   - ingress.yaml
   - cluster-secret-store.yaml
   - redis-external-secret.yaml
+  - egress-policy.yaml
 patches:
   - target: {kind: Deployment}
     patch: |-

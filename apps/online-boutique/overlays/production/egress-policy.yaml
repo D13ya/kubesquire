@@ -1,0 +1,27 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: restrict-egress
+  namespace: online-boutique
+spec:
+  endpointSelector:
+    matchLabels: {} # Select all pods in namespace
+  egress:
+  # Allow DNS (Required for resolving external names)
+  - toEndpoints:
+    - matchLabels:
+        k8s-app: kube-dns
+        io.kubernetes.pod.namespace: kube-system
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+  # Allow Google APIs (for Monitoring/Tracing)
+  # Note: This requires Cilium DNS Proxy to be enabled
+  - toFQDNs:
+    - matchName: "monitoring.googleapis.com"
+    - matchName: "cloudtrace.googleapis.com"
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
