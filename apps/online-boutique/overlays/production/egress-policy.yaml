@@ -16,6 +16,8 @@ spec:
     - ports:
       - port: "53"
         protocol: UDP
+      - port: "53"
+        protocol: TCP
   # Allow Google APIs (for Monitoring/Tracing)
   # Note: This requires Cilium DNS Proxy to be enabled
   - toFQDNs:
